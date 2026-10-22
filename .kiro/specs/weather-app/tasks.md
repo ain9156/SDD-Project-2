@@ -31,19 +31,19 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Handle network errors (return NETWORK_ERROR error)
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
   
-  - [ ]* 3.2 Write property test for coordinate extraction
+  - [-] 3.2 Write property test for coordinate extraction
     - **Property 3: Coordinate Extraction**
     - **Validates: Requirements 2.2**
     - Generate mock API responses with random coordinates
     - Verify extracted coordinates are within valid ranges (lat: -90 to 90, lon: -180 to 180)
   
-  - [ ]* 3.3 Write property test for HTTP error handling
+  - [-] 3.3 Write property test for HTTP error handling
     - **Property 4: Geocoding HTTP Error Handling**
     - **Validates: Requirements 2.4**
     - Generate various HTTP error status codes (4xx, 5xx)
     - Verify SERVICE_UNAVAILABLE error is returned for all HTTP errors
   
-  - [ ]* 3.4 Write unit tests for geocoding service edge cases
+  - [-] 3.4 Write unit tests for geocoding service edge cases
     - Test empty results array handling
     - Test malformed API responses
     - Test network timeout scenarios
@@ -59,13 +59,13 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Handle network errors (return NETWORK_ERROR error)
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
   
-  - [ ]* 4.2 Write property test for HTTP error handling
+  - [-] 4.2 Write property test for HTTP error handling
     - **Property 5: Weather Service HTTP Error Handling**
     - **Validates: Requirements 3.5**
     - Generate various HTTP error status codes (4xx, 5xx)
     - Verify appropriate error is returned for all HTTP failures
   
-  - [ ]* 4.3 Write unit tests for weather service edge cases
+  - [x] 4.3 Write unit tests for weather service edge cases
     - Test missing temperature field in response
     - Test missing humidity field in response
     - Test missing precipitation field in response
@@ -83,7 +83,7 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Implement createWeatherDisplayData(cityName: string, data: WeatherData): WeatherDisplayData
     - _Requirements: 4.2, 4.3, 5.2, 5.3, 6.2, 6.3_
   
-  - [ ]* 6.2 Write property test for weather data formatting
+  - [x] 6.2 Write property test for weather data formatting
     - **Property 6: Weather Data Formatting**
     - **Validates: Requirements 4.2, 4.3, 5.2, 5.3, 6.2, 6.3**
     - Generate random weather data values (temperature, humidity, precipitation)
@@ -91,7 +91,7 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Verify humidity has % symbol and no decimals
     - Verify precipitation has mm unit and max 1 decimal
   
-  - [ ]* 6.3 Write unit tests for formatting edge cases
+  - [x] 6.3 Write unit tests for formatting edge cases
     - Test negative temperatures
     - Test very large numbers
     - Test zero values
@@ -106,7 +106,7 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Return appropriate validation errors
     - _Requirements: 1.3_
   
-  - [ ]* 7.2 Write property test for empty input validation
+  - [x] 7.2 Write property test for empty input validation
     - **Property 1: Empty Input Validation**
     - **Validates: Requirements 1.3**
     - Generate strings with only whitespace characters (spaces, tabs, newlines, empty)
@@ -121,13 +121,13 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Orchestrate workflow: validate → geocode → fetch weather → format → update UI
     - _Requirements: 1.4, 2.1, 3.1, 7.1, 7.2, 7.3, 8.1, 8.2, 8.3_
   
-  - [ ]* 8.2 Write property test for valid input triggering geocoding
+  - [x] 8.2 Write property test for valid input triggering geocoding
     - **Property 2: Valid Input Triggers Geocoding**
     - **Validates: Requirements 1.4**
     - Generate random non-empty strings with at least one non-whitespace character
     - Verify geocoding service is called for each valid input
   
-  - [ ]* 8.3 Write unit tests for controller error handling
+  - [x] 8.3 Write unit tests for controller error handling
     - Test CITY_NOT_FOUND error routing to UI message
     - Test SERVICE_UNAVAILABLE error routing to UI message
     - Test validation error handling
@@ -152,19 +152,19 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Implement onSubmit event handler setup
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 6.1, 7.1, 7.2, 7.3, 8.1, 8.2, 8.3, 9.1_
   
-  - [ ]* 9.3 Write property test for weather data display completeness
+  - [x] 9.3 Write property test for weather data display completeness
     - **Property 7: Weather Data Display Completeness**
     - **Validates: Requirements 4.1, 5.1, 6.1, 9.1**
     - Generate random weather data with various city names
     - Verify rendered output contains city name, temperature, humidity, and precipitation values
   
-  - [ ]* 9.4 Write property test for error message display
+  - [x] 9.4 Write property test for error message display
     - **Property 8: Error Message Display**
     - **Validates: Requirements 7.3**
     - Generate various weather service error types
     - Verify UI displays error message for each error type
   
-  - [ ]* 9.5 Write property test for UI functional after errors
+  - [x] 9.5 Write property test for UI functional after errors
     - **Property 9: UI Functional After Errors**
     - **Validates: Requirements 7.4**
     - Generate various error states (geocoding and weather service errors)
@@ -178,14 +178,14 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Implement success/error → loading transition on new submit
     - _Requirements: 8.1, 8.2, 8.3_
   
-  - [ ]* 10.2 Write property test for loading state transitions
+  - [-] 10.2 Write property test for loading state transitions
     - **Property 10: Loading State Transitions**
     - **Validates: Requirements 8.1, 8.2, 8.3**
     - Generate random city search requests (both successful and failing)
     - Verify state transitions follow correct order: idle → loading → success/error
     - Verify loading indicator visibility matches expected state
   
-  - [ ]* 10.3 Write property test for submit button disabled during loading
+  - [-] 10.3 Write property test for submit button disabled during loading
     - **Property 11: Submit Button Disabled During Loading**
     - **Validates: Requirements 8.4**
     - Generate various scenarios that trigger loading state
@@ -204,7 +204,7 @@ This implementation plan breaks down the weather app into discrete coding steps,
     - Initialize the application
     - _Requirements: All requirements (integration)_
   
-  - [ ]* 12.2 Write integration tests for complete workflows
+  - [~] 12.2 Write integration tests for complete workflows
     - Test successful city search flow (Berlin example)
     - Test city not found flow
     - Test geocoding service unavailable flow

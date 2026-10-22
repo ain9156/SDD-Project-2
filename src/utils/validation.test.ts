@@ -1,7 +1,33 @@
 import { describe, test, expect } from 'vitest';
 import { validateCityName } from './validation';
+import fc from 'fast-check';
 
 describe('validateCityName', () => {
+  // **Property 1: Empty Input Validation**
+  // **Validates: Requirements 1.3**
+  // Feature: weather-app, Property 1: Empty Input Validation
+  describe('property test: empty input validation', () => {
+    test('should reject all strings composed entirely of whitespace characters', () => {
+      fc.assert(
+        fc.property(
+          // Generator for whitespace-only strings
+          fc.oneof(
+            fc.constant(''),  // empty string
+            fc.stringOf(fc.constantFrom(' ', '\t', '\n', '\r')),  // whitespace characters only
+          ),
+          (input) => {
+            const result = validateCityName(input);
+            
+            // Verify the input is rejected with a validation error
+            expect(result.isValid).toBe(false);
+            expect(result.error).toBe('El nombre de la ciudad es requerido');
+          }
+        ),
+        { numRuns: 100 }  // Run 100 iterations as specified in design
+      );
+    });
+  });
+
   describe('empty string validation', () => {
     test('should reject empty string', () => {
       const result = validateCityName('');

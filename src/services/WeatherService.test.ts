@@ -1,6 +1,7 @@
 // Unit tests for WeatherService
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { WeatherService } from './WeatherService';
 import type { Coordinates } from '../types/models';
 import type { WeatherApiResponse } from '../types/api';
@@ -329,6 +330,154 @@ describe('WeatherService', () => {
         expect(result.data.humidity).toBe(100);
         expect(result.data.precipitation).toBe(0.0);
       }
+    });
+
+    it('should return NETWORK_ERROR when response contains malformed JSON', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw new SyntaxError('Unexpected token in JSON');
+        }
+      });
+
+      const result = await service.getCurrentWeather(mockCoordinates);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe('NETWORK_ERROR');
+      }
+    });
+
+    it('should return DATA_UNAVAILABLE when response has null values', async () => {
+      const mockResponse = {
+        latitude: 52.52,
+        longitude: 13.41,
+        current: {
+          time: '2024-01-01T12:00:00Z',
+          temperature_2m: null,
+          relative_humidity_2m: 65,
+          precipitation: 0.0
+        }
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await service.getCurrentWeather(mockCoordinates);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe('DATA_UNAVAILABLE');
+      }
+    });
+
+    it('should return DATA_UNAVAILABLE when response has undefined values', async () => {
+      const mockResponse = {
+        latitude: 52.52,
+        longitude: 13.41,
+        current: {
+          time: '2024-01-01T12:00:00Z',
+          temperature_2m: 15.3,
+          relative_humidity_2m: undefined,
+          precipitation: 0.0
+        }
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await service.getCurrentWeather(mockCoordinates);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe('DATA_UNAVAILABLE');
+      }
+    });
+
+    it('should return DATA_UNAVAILABLE when response has string instead of number', async () => {
+      const mockResponse = {
+        latitude: 52.52,
+        longitude: 13.41,
+        current: {
+          time: '2024-01-01T12:00:00Z',
+          temperature_2m: "15.3", // String instead of number
+          relative_humidity_2m: 65,
+          precipitation: 0.0
+        }
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await service.getCurrentWeather(mockCoordinates);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe('DATA_UNAVAILABLE');
+      }
+    });
+
+    it('should return DATA_UNAVAILABLE when current object is empty', async () => {
+      const mockResponse = {
+        latitude: 52.52,
+        longitude: 13.41,
+        current: {}
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await service.getCurrentWeather(mockCoordinates);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe('DATA_UNAVAILABLE');
+      }
+    });
+
+    // **Property 5: Weather Service HTTP Error Handling**
+    // **Validates: Requirements 3.5**
+    it('property: should return appropriate error for all HTTP failures (4xx, 5xx)', () => {
+      const mockCoordinates: Coordinates = {
+        latitude: 52.52,
+        longitude: 13.41
+      };
+
+      // Generator for HTTP error status codes (4xx and 5xx)
+      const httpErrorStatusGen = fc.oneof(
+        fc.integer({ min: 400, max: 499 }), // 4xx client errors
+        fc.integer({ min: 500, max: 599 })  // 5xx server errors
+      );
+
+      fc.assert(
+        fc.asyncProperty(httpErrorStatusGen, async (statusCode) => {
+          // Mock fetch to return HTTP error
+          global.fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            status: statusCode,
+            statusText: `HTTP Error ${statusCode}`
+          });
+
+          const result = await service.getCurrentWeather(mockCoordinates);
+
+          // Verify that an error is returned (not success)
+          expect(result.success).toBe(false);
+
+          // Verify that the error is SERVICE_UNAVAILABLE
+          if (!result.success) {
+            expect(result.error).toBe('SERVICE_UNAVAILABLE');
+          }
+        }),
+        { numRuns: 100 }
+      );
     });
   });
 });

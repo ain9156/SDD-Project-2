@@ -1,6 +1,7 @@
 // Unit tests for WeatherAppController
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import fc from 'fast-check';
 import { WeatherAppController } from './WeatherAppController';
 import { GeocodingService } from '../services/GeocodingService';
 import { WeatherService } from '../services/WeatherService';
@@ -428,6 +429,152 @@ describe('WeatherAppController', () => {
       if (errorState.type === 'error') {
         expect(errorState.message).toContain('No se pudieron obtener los datos meteorológicos');
       }
+    });
+  });
+
+  describe('Property Tests', () => {
+    /**
+     * Property 2: Valid Input Triggers Geocoding
+     * Validates: Requirements 1.4
+     * 
+     * For any non-empty string containing at least one non-whitespace character,
+     * submitting it as a city name SHALL result in a call to the geocoding service
+     */
+    it('should call geocoding service for any valid input', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          // Generate non-empty strings with at least one non-whitespace character
+          fc.string({ minLength: 1, maxLength: 50 })
+            .filter(s => s.trim().length > 0),
+          async (cityName) => {
+            // Reset controller and state tracking for each iteration
+            controller = new WeatherAppController(mockGeocodingService, mockWeatherService);
+            stateChanges = [];
+            controller.onStateChange((state) => {
+              stateChanges.push(state);
+            });
+
+            // Create a spy on the geocoding service
+            const geocodeSpy = vi.spyOn(mockGeocodingService, 'geocodeCity')
+              .mockResolvedValue({
+                success: false,
+                error: 'CITY_NOT_FOUND' // Return error to stop workflow quickly
+              });
+
+            // Call handleCitySearch with the generated city name
+            await controller.handleCitySearch(cityName);
+
+            // Verify geocoding service was called with the city name
+            expect(geocodeSpy).toHaveBeenCalledWith(cityName);
+            expect(geocodeSpy).toHaveBeenCalledTimes(1);
+
+            // Clean up
+            geocodeSpy.mockRestore();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    /**
+     * Property 10: Loading State Transitions
+     * Validates: Requirements 8.1, 8.2, 8.3
+     * 
+     * For any city search request, the UI SHALL transition through states in the
+     * following order: idle → loading → success/error
+     */
+    it('should follow correct state transition order for any city search', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          // Generate valid city names
+          fc.string({ minLength: 1, maxLength: 50 })
+            .filter(s => s.trim().length > 0),
+          // Generate random outcome: success or one of several error types
+          fc.oneof(
+            fc.constant({ type: 'success' as const }),
+            fc.constant({ type: 'geocoding_error' as const, error: 'CITY_NOT_FOUND' as const }),
+            fc.constant({ type: 'geocoding_error' as const, error: 'SERVICE_UNAVAILABLE' as const }),
+            fc.constant({ type: 'geocoding_error' as const, error: 'NETWORK_ERROR' as const }),
+            fc.constant({ type: 'weather_error' as const, error: 'DATA_UNAVAILABLE' as const }),
+            fc.constant({ type: 'weather_error' as const, error: 'SERVICE_UNAVAILABLE' as const }),
+            fc.constant({ type: 'weather_error' as const, error: 'NETWORK_ERROR' as const })
+          ),
+          async (cityName, outcome) => {
+            // Reset controller and state tracking for each iteration
+            controller = new WeatherAppController(mockGeocodingService, mockWeatherService);
+            stateChanges = [];
+            controller.onStateChange((state) => {
+              stateChanges.push(state);
+            });
+
+            // Mock services based on the outcome
+            if (outcome.type === 'success') {
+              // Mock successful geocoding
+              vi.spyOn(mockGeocodingService, 'geocodeCity').mockResolvedValue({
+                success: true,
+                coordinates: { latitude: 52.52, longitude: 13.405 }
+              });
+              // Mock successful weather retrieval
+              vi.spyOn(mockWeatherService, 'getCurrentWeather').mockResolvedValue({
+                success: true,
+                data: {
+                  temperature: 15.3,
+                  humidity: 65,
+                  precipitation: 0.0,
+                  timestamp: new Date()
+                }
+              });
+            } else if (outcome.type === 'geocoding_error') {
+              // Mock geocoding failure
+              vi.spyOn(mockGeocodingService, 'geocodeCity').mockResolvedValue({
+                success: false,
+                error: outcome.error
+              });
+            } else if (outcome.type === 'weather_error') {
+              // Mock successful geocoding but weather failure
+              vi.spyOn(mockGeocodingService, 'geocodeCity').mockResolvedValue({
+                success: true,
+                coordinates: { latitude: 52.52, longitude: 13.405 }
+              });
+              vi.spyOn(mockWeatherService, 'getCurrentWeather').mockResolvedValue({
+                success: false,
+                error: outcome.error
+              });
+            }
+
+            // Execute the search
+            await controller.handleCitySearch(cityName);
+
+            // Verify state transitions
+            // Should have at least 2 states: loading and then success/error
+            expect(stateChanges.length).toBeGreaterThanOrEqual(2);
+
+            // First state should be loading
+            expect(stateChanges[0].type).toBe('loading');
+
+            // Final state should be success or error based on outcome
+            const finalState = stateChanges[stateChanges.length - 1];
+            if (outcome.type === 'success') {
+              expect(finalState.type).toBe('success');
+            } else {
+              expect(finalState.type).toBe('error');
+            }
+
+            // Verify no loading state appears after success/error
+            // (all loading states should be before the final state)
+            for (let i = 1; i < stateChanges.length; i++) {
+              if (stateChanges[i].type === 'success' || stateChanges[i].type === 'error') {
+                // No loading state should appear after this point
+                for (let j = i + 1; j < stateChanges.length; j++) {
+                  expect(stateChanges[j].type).not.toBe('loading');
+                }
+                break;
+              }
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
     });
   });
 });

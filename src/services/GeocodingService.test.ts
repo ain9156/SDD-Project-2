@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import fc from 'fast-check';
 import { GeocodingService } from './GeocodingService';
 import { GeocodingApiResponse } from '../types/api';
 
@@ -182,6 +183,43 @@ describe('GeocodingService', () => {
         expect(result.coordinates.latitude).toBe(48.85);
         expect(result.coordinates.longitude).toBe(2.35);
       }
+    });
+
+    /**
+     * Property 4: Geocoding HTTP Error Handling
+     * Validates: Requirements 2.4
+     * 
+     * For any HTTP error response (status codes 4xx or 5xx) from the geocoding API,
+     * the geocoding service SHALL return a SERVICE_UNAVAILABLE error
+     */
+    it('property: all HTTP errors return SERVICE_UNAVAILABLE', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          // Generate various HTTP error status codes (4xx and 5xx)
+          fc.oneof(
+            fc.integer({ min: 400, max: 499 }), // 4xx client errors
+            fc.integer({ min: 500, max: 599 })  // 5xx server errors
+          ),
+          fc.string({ minLength: 1, maxLength: 50 }), // Random city names
+          async (statusCode, cityName) => {
+            // Mock HTTP error response
+            global.fetch = vi.fn().mockResolvedValue({
+              ok: false,
+              status: statusCode
+            });
+
+            // Call the service
+            const result = await service.geocodeCity(cityName);
+
+            // Verify the result is a SERVICE_UNAVAILABLE error
+            expect(result.success).toBe(false);
+            if (!result.success) {
+              expect(result.error).toBe('SERVICE_UNAVAILABLE');
+            }
+          }
+        ),
+        { numRuns: 100 } // Run 100 iterations as specified in design
+      );
     });
   });
 });
