@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App - Pronóstico del Clima</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Pronóstico del Clima</h1>
+      <p class="subtitle">Consulta el clima de cualquier ciudad del mundo</p>
+    </header>
+
+    <main>
+      <!-- Input Form (Requirements 1.1, 1.2) -->
+      <section class="search-section">
+        <form id="weather-form" class="search-form">
+          <div class="form-group">
+            <label for="city-input" class="form-label">Nombre de la Ciudad</label>
+            <input 
+              type="text" 
+              id="city-input" 
+              class="city-input" 
+              placeholder="Ej: Madrid, London, Tokyo"
+              autocomplete="off"
+              aria-label="Nombre de la ciudad"
+            >
+          </div>
+          <button 
+            type="submit" 
+            id="submit-button" 
+            class="submit-button"
+            aria-label="Buscar clima"
+          >
+            Buscar Clima
+          </button>
+        </form>
+      </section>
+
+      <!-- Loading Indicator (Initially hidden, Requirement 8.1) -->
+      <section id="loading-section" class="loading-section hidden" aria-live="polite">
+        <div class="loading-indicator">
+          <div class="spinner"></div>
+          <p class="loading-text">Cargando datos del clima...</p>
+        </div>
+      </section>
+
+      <!-- Error Display Section (Initially hidden, Requirement 7.1, 7.2, 7.3) -->
+      <section id="error-section" class="error-section hidden" role="alert" aria-live="assertive">
+        <div class="error-container">
+          <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p id="error-message" class="error-message"></p>
+        </div>
+      </section>
+
+      <!-- Weather Display Section (Initially hidden, Requirements 4.1, 5.1, 6.1, 9.1) -->
+      <section id="weather-section" class="weather-section hidden" aria-live="polite">
+        <div class="weather-container">
+          <!-- City Name Display (Requirement 9.1, 9.2) -->
+          <div class="city-header">
+            <h2 id="city-name" class="city-name"></h2>
+          </div>
+
+          <!-- Weather Data Display -->
+          <div class="weather-data">
+            <!-- Temperature (Requirements 4.1, 4.2, 4.3) -->
+            <div class="weather-card temperature-card">
+              <div class="weather-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                </svg>
+              </div>
+              <div class="weather-info">
+                <h3 class="weather-label">Temperatura</h3>
+                <p id="temperature-value" class="weather-value"></p>
+              </div>
+            </div>
+
+            <!-- Humidity (Requirements 5.1, 5.2, 5.3) -->
+            <div class="weather-card humidity-card">
+              <div class="weather-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+              </div>
+              <div class="weather-info">
+                <h3 class="weather-label">Humedad</h3>
+                <p id="humidity-value" class="weather-value"></p>
+              </div>
+            </div>
+
+            <!-- Precipitation (Requirements 6.1, 6.2, 6.3) -->
+            <div class="weather-card precipitation-card">
+              <div class="weather-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="19" x2="8" y2="21"></line>
+                  <line x1="8" y1="13" x2="8" y2="15"></line>
+                  <line x1="16" y1="19" x2="16" y2="21"></line>
+                  <line x1="16" y1="13" x2="16" y2="15"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="12" y1="15" x2="12" y2="17"></line>
+                  <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                </svg>
+              </div>
+              <div class="weather-info">
+                <h3 class="weather-label">Precipitación</h3>
+                <p id="precipitation-value" class="weather-value"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p class="footer-text">Datos proporcionados por <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a></p>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
